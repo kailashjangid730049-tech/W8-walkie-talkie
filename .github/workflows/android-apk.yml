@@ -35,10 +35,13 @@ jobs:
           unzip -q walkie-kit.zip -d .
           chmod +x walkie-kit/*.sh
 
-      - name: Install Android SDK
+      
+       - name: Install Android SDK
         run: |
           cd walkie-kit
+          sed -i 's|yes | sdkmanager --licenses >/dev/null|yes | sdkmanager --licenses >/dev/null 2>&1 || true|' install_android_sdk.sh
           ./install_android_sdk.sh
+
 
       - name: Setup Android Environment
         run: |
