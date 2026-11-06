@@ -1,0 +1,63 @@
+
+name: W8 Walkie Talkie APK Build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'walkie-kit.zip'
+      - '.github/workflows/android-apk.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Extract Walkie Source
+        run: |
+          unzip -q walkie-kit.zip -d .
+          chmod +x walkie-kit/*.sh
+
+      - name: Install Android SDK
+        run: |
+          cd walkie-kit
+          ./install_android_sdk.sh
+
+      - name: Setup Android Environment
+        run: |
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
+          echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+
+      - name: Create React Native Project
+        run: |
+          ./walkie-kit/setup.sh "$GITHUB_WORKSPACE/Walkie"
+
+      - name: Build APK
+        run: |
+          ./walkie-kit/build_apk.sh "$GITHUB_WORKSPACE/Walkie"
+
+      - name: Upload W8 APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: W8-Walkie-Talkie-APK
+          path: Walkie/android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
